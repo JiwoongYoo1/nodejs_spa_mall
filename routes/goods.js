@@ -10,16 +10,21 @@ router.get("/goods/cart", async (req, res) => {
   
 	const goods = await Goods.find({ goodsId: goodsIds});
   
-	const [results] = carts.map((cart) => {
-		  return {
-			  quantity: cart.quantity,
-			  goods: goods.find((item) => item.goodsId === cart.goodsId)
-		  };
-	});
-  
+	const cart = carts.map((cart) => ({		  
+			quantity: cart.quantity,
+			goods: goods.find((item) => item.goodsId === cart.goodsId)		  
+	}));
+	
 	res.json({
-	  results,
+		cart,
 	});
+	// res.json({
+	//   cart: carts.map((cart) => ({			  
+	// 		quantity: cart.quantity,
+	// 		goods: goods.find((item) => item.goodsId === cart.goodsId)
+			 
+	// 	})),
+	// });
   });
 
 router.get('/', (req, res) => {
@@ -30,7 +35,7 @@ router.get('/goods', async (req, res) => {
 	const {category} = req.query;
 	
 
-	const goods = await Carts.find({category});
+	const goods = await Goods.find({category});
 	res.json({
 		goods
 	});
@@ -39,10 +44,10 @@ router.get('/goods', async (req, res) => {
 router.get("/goods/:goodsId", async (req, res) => {
 	const { goodsId } = req.params;
 
-	const [detail] = await Goods.find({ goodsId: Number(goodsId) });
+	const [goods] = await Goods.find({ goodsId: Number(goodsId) });
 
 	res.json({
-		detail,
+		goods,  //goods: detail 같은의미
 	});
 });
 
@@ -83,10 +88,10 @@ router.put("/goods/:goodsId/cart", async (req, res)=>{
 
 	const existCarts = await Cart.find({goodsId: Number(goodsId)});
 	if(!existCarts.length){
-		return res.status(400).json({success : false, errorMessage: "장바구니에 해당 상품이 없습니다."});
-	}
-
-	 await Cart.updateOne({goodsId: Number(goodsId)}, { $set: {quantity }}) 
+		await Cart.create({goodsId: Number(goodsId), quantity});
+	}else{
+		await Cart.updateOne({goodsId: Number(goodsId)}, { $set: {quantity }}) 
+	} 
 
 	 res.json({success: true})
 });
